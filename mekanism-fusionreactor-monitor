@@ -1,22 +1,20 @@
+-- Config
+local reactorName = "Reactor 1"  -- ändern je nach Reaktor
+local modemSide   = "back"       -- Seite, an der das Modem angeschlossen ist
+local receiverID  = 2            -- ID des zentralen Computers
+
 -- Peripherals
 local mon     = peripheral.find("monitor")
 local reactor = peripheral.find("fusionReactorLogicAdapter")
+local modem   = peripheral.find("modem")
 
 if not mon then error("Monitor not found!") end
 if not reactor then error("Fusion Reactor Logic Adapter not found!") end
+if not modem then error("Modem not found!") end
 
--- Monitor setup
+-- Setup Monitor
 mon.setTextScale(1)
 mon.clear()
-
--- Funktion für k/M/G/T
-local function formatAmount(n)
-    if n >= 1e12 then return string.format("%.2fT", n/1e12)
-    elseif n >= 1e9 then return string.format("%.2fG", n/1e9)
-    elseif n >= 1e6 then return string.format("%.2fM", n/1e6)
-    elseif n >= 1e3 then return string.format("%.2fk", n/1e3)
-    else return tostring(n) end
-end
 
 -- Funktion zum zentrierten Schreiben
 local function writeCentered(row, text)
@@ -26,18 +24,17 @@ local function writeCentered(row, text)
     mon.write(text)
 end
 
--- Main loop
 while true do
     mon.clear()
     local ok, value = pcall(function() return reactor.getProductionRate() end)
-    local display
+    local feValue
     if ok then
-        local feValue = value / 2.5 -- Umrechnung von J in FE
-        display = formatAmount(feValue) .. " FE"
+        feValue = value / 2.5 -- J -> FE
+        writeCentered(1, reactorName .. ": " .. string.format("%.2f FE", feValue))
+        -- Sende Wert an zentralen Computer
+        modem.transmit(receiverID, 0, {name = reactorName, value = feValue})
     else
-        display = "Error"
+        writeCentered(1, reactorName .. ": Error")
     end
-    writeCentered(1, display)
-
-    sleep(2) -- alle 2 Sekunden aktualisieren
+    sleep(2)
 end
