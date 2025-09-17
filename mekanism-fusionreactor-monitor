@@ -1,16 +1,18 @@
 -- Config
 local reactorName = "Reactor 1"  -- ändern je nach Reaktor
-local modemSide   = "back"       -- Seite, an der das Modem angeschlossen ist
-local receiverID  = 2            -- ID des zentralen Computers
+local receiverID  = 0            -- Port des zentralen Computers (Receiver)
 
 -- Peripherals
 local mon     = peripheral.find("monitor")
 local reactor = peripheral.find("fusionReactorLogicAdapter")
-local modem   = peripheral.find("modem")
+local modem   = peripheral.find("modem")  -- sucht automatisch das erste Modem
 
 if not mon then error("Monitor not found!") end
 if not reactor then error("Fusion Reactor Logic Adapter not found!") end
 if not modem then error("Modem not found!") end
+
+-- Öffne den Modem-Port für Kommunikation
+modem.open(receiverID)
 
 -- Setup Monitor
 mon.setTextScale(1)
@@ -24,6 +26,7 @@ local function writeCentered(row, text)
     mon.write(text)
 end
 
+-- Hauptloop
 while true do
     mon.clear()
     local ok, value = pcall(function() return reactor.getProductionRate() end)
