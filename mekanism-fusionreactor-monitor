@@ -1,0 +1,42 @@
+-- Peripherals
+local mon     = peripheral.find("monitor")
+local reactor = peripheral.find("fusionReactorLogicAdapter")
+
+if not mon then error("Monitor not found!") end
+if not reactor then error("Fusion Reactor Logic Adapter not found!") end
+
+-- Monitor setup
+mon.setTextScale(1)
+mon.clear()
+
+-- Funktion für k/M/G/T
+local function formatAmount(n)
+    if n >= 1e12 then return string.format("%.2fT", n/1e12)
+    elseif n >= 1e9 then return string.format("%.2fG", n/1e9)
+    elseif n >= 1e6 then return string.format("%.2fM", n/1e6)
+    elseif n >= 1e3 then return string.format("%.2fk", n/1e3)
+    else return tostring(n) end
+end
+
+-- Funktion zum zentrierten Schreiben
+local function writeCentered(row, text)
+    local w,_ = mon.getSize()
+    local x = math.floor((w - #text) / 2) + 1
+    mon.setCursorPos(x,row)
+    mon.write(text)
+end
+
+-- Main loop
+while true do
+    mon.clear()
+    local ok, value = pcall(function() return reactor.getProductionRate() end)
+    local display
+    if ok then
+        display = formatAmount(value) .. " FE"
+    else
+        display = "Error"
+    end
+    writeCentered(1, display)
+
+    sleep(2) -- alle 2 Sekunden aktualisieren
+end
